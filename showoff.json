@@ -3,6 +3,8 @@
   "sections":[
     {"section":"title"},
     {"section":"overview"},
-    {"section":"real_examples"}
+    {"section":"sample_code"},
+    {"section":"real_examples"},
+    {"section":"resources"}
   ]
 }

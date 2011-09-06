@@ -1,0 +1,17 @@
+pre {
+  font-size: 2.5em;
+}
+
+div[ref^="sample_code/03_steps"] pre {
+  font-size: 1.0em;
+}
+
+div[ref="sample_code/03_steps/1"] pre {
+  font-size: 1.5em;
+}
+
+div[ref="sample_code/03_steps/2"] pre,
+div[ref="sample_code/03_steps/3"] pre,
+div[ref="sample_code/03_steps/4"] pre {
+  font-size: 1.3em;
+}

@@ -9,6 +9,5 @@
 
 * What makes a query slow?
 * What is an index?
-* Sample code
-* How to use EXPLAIN
+* Sample code + EXPLAIN
 * Read world examples
