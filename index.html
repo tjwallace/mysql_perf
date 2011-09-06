@@ -1,0 +1,453 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <title>Mysql Optimization</title>
+
+  <link rel="stylesheet" href="./css/reset.css" type="text/css"/>
+  <link rel="stylesheet" href="./css/showoff.css" type="text/css"/>
+
+  <script type="text/javascript" src="./js/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="./js/jquery.cycle.all.js"></script>
+	<script type="text/javascript" src="./js/jquery-print.js"></script>
+  <script type="text/javascript" src="./js/jquery.batchImageLoad.js"></script>
+
+  <script type="text/javascript" src="./js/jquery.doubletap-0.1.js"></script>
+
+  <script type="text/javascript" src="./js/fg.menu.js"></script>
+  <script type="text/javascript" src="./js/showoff.js"></script>
+  <script type="text/javascript" src="./js/jTypeWriter.js"> </script>
+  <script type="text/javascript" src="./js/sh_main.min.js"></script>
+  <script type="text/javascript" src="./js/core.js"></script>
+  <script type="text/javascript" src="./js/showoffcore.js"></script>
+
+  <link type="text/css" href="./css/fg.menu.css" media="screen" rel="stylesheet" />
+  <link type="text/css" href="./css/theme/ui.all.css" media="screen" rel="stylesheet" />
+  <link type="text/css" href="./css/sh_style.css" rel="stylesheet" >
+
+  
+    <link rel="stylesheet" href="file/custom.css" type="text/css"/>
+  
+
+  
+
+  <script type="text/javascript">
+  $(function(){
+    setupPreso(false, './');
+  });
+  </script>
+</head>
+
+<body>
+
+
+<a tabindex="0" href="#search-engines" class="fg-button fg-button-icon-right ui-widget ui-state-default ui-corner-all" id="navmenu"><span class="ui-icon ui-icon-triangle-1-s"></span>slides</a>
+<div id="navigation" class="hidden"></div>
+
+<div id="help">
+  <table>
+    <tr><td class="key">space, &rarr;</td><td>next slide</td></tr>
+    <tr><td class="key">&larr;</td><td>previous slide</td></tr>
+    <tr><td class="key">d</td><td>debug mode</td></tr>
+    <tr><td class="key">## &lt;ret&gt;</td><td>go to slide #</td></tr>
+    <tr><td class="key">c</td><td>table of contents (vi)</td></tr>
+    <tr><td class="key">f</td><td>toggle footer</td></tr>
+    <tr><td class="key">r</td><td>reload slides</td></tr>
+    <tr><td class="key">z</td><td>toggle help (this)</td></tr>
+  </table>
+</div>
+
+<div class="buttonNav">
+  <input type="submit" onClick="prevStep();" value="prev"/>
+  <input type="submit" onClick="nextStep();" value="next"/>
+</div>
+
+<div id="preso">loading presentation...</div>
+<div id="footer">
+  <span id="slideInfo"></span>
+  <span id="debugInfo"></span>
+  <span id="notesInfo"></span>
+</div>
+
+<div id="slides" class="offscreen" style="display:none;">
+<div class="slide" data-transition="none"><div class="content" ref="title/title/1">
+<h1>MySQL Optimization</h1>
+
+<h2>Sept 6, 2011</h2>
+
+<h2>Jeff Wallace</h2></div>
+</div><div class="slide" data-transition="none"><div class="content bullets incremental" ref="title/title/2">
+<h1>Overview</h1>
+
+<ul>
+<li>What makes a query slow?</li>
+<li>What is an index?</li>
+<li>Sample code + EXPLAIN</li>
+<li>Read world examples</li>
+</ul>
+</div>
+</div><div class="slide" data-transition="none"><div class="content bullets incremental" ref="overview/overview/1">
+<h1>What makes a query slow?</h1>
+
+<ul>
+<li>Returning too much data</li>
+<li>Filtering un-indexed data (filesort)</li>
+</ul>
+</div>
+</div><div class="slide" data-transition="none"><div class="content bullets incremental" ref="overview/overview/2">
+<h1>What is an index?</h1>
+
+<ul>
+<li>Allow fast lookups - better than O(n)</li>
+<li>MySQL uses <a href="http://en.wikipedia.org/wiki/B-tree">B-trees</a> for most of its indexes</li>
+<li><img src="file:///home/jeff/code/partnerpedia/mysql_perf_slides/overview/b-tree.png" width="500" height="139" alt="B-tree"/></li>
+<li>O(log n) lookup</li>
+</ul>
+</div>
+</div><div class="slide" data-transition="none"><div class="content" ref="sample_code/01_title">
+<h1>Sample code</h1>
+
+<h2>https://github.com/tjwallace/mysql_perf</h2></div>
+</div><div class="slide" data-transition="none"><div class="content" ref="sample_code/02_tables/1">
+<h1>Tables</h1></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/02_tables/2">
+<h1>posts</h1>
+
+<pre><code>+------------+--------------+------+-----+---------+----------------+
+| Field      | Type         | Null | Key | Default | Extra          |
++------------+--------------+------+-----+---------+----------------+
+| id         | int(11)      | NO   | PRI | NULL    | auto_increment |
+| title      | varchar(255) | YES  |     | NULL    |                |
+| body       | text         | YES  |     | NULL    |                |
+| user_id    | int(11)      | YES  | MUL | NULL    |                |
+| published  | tinyint(1)   | YES  | MUL | 0       |                |
+| created_at | datetime     | YES  | MUL | NULL    |                |
+| updated_at | datetime     | YES  |     | NULL    |                |
++------------+--------------+------+-----+---------+----------------+
+</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/02_tables/3">
+<h1>users</h1>
+
+<pre><code>+------------+--------------+------+-----+---------+----------------+
+| Field      | Type         | Null | Key | Default | Extra          |
++------------+--------------+------+-----+---------+----------------+
+| id         | int(11)      | NO   | PRI | NULL    | auto_increment |
+| name       | varchar(255) | YES  |     | NULL    |                |
+| created_at | datetime     | YES  |     | NULL    |                |
+| updated_at | datetime     | YES  |     | NULL    |                |
++------------+--------------+------+-----+---------+----------------+
+</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/03_steps/1">
+<h1>Step 1</h1>
+
+<h2>No indexes</h2>
+
+<pre><code>5 latest posts
+SELECT  `posts`.* FROM `posts`  ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+----------------+
+| id | select_type | table | type | possible_keys | key | key_len | ref | filtered | rows  |     Extra      |
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+----------------+
+| 1  | SIMPLE      | posts | ALL  |               |     |         |     | 97924    | 100.0 | Using filesort |
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+----------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.296479)
+
+5 latest published posts
+SELECT  `posts`.* FROM `posts`  WHERE `posts`.`published` = 1 ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+-----------------------------+
+| id | select_type | table | type | possible_keys | key | key_len | ref | filtered | rows  |            Extra            |
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+-----------------------------+
+| 1  | SIMPLE      | posts | ALL  |               |     |         |     | 97924    | 100.0 | Using where; Using filesort |
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+-----------------------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.292020)
+</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/03_steps/2">
+<h1>Step 2</h1>
+
+<h2>Index <code>created_at</code> column</h2>
+
+<pre><code>5 latest posts
+SELECT  `posts`.* FROM `posts`  ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------+
+| id | select_type | table | type  | possible_keys |            key            | key_len | ref | filtered |   rows    | Extra |
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------+
+| 1  | SIMPLE      | posts | index |               | index_posts_on_created_at | 9       |     | 5        | 1907540.0 |       |
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.001720)
+
+5 latest published posts
+SELECT  `posts`.* FROM `posts`  WHERE `posts`.`published` = 1 ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------------+
+| id | select_type | table | type  | possible_keys |            key            | key_len | ref | filtered |   rows    |    Extra    |
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------------+
+| 1  | SIMPLE      | posts | index |               | index_posts_on_created_at | 9       |     | 5        | 1907540.0 | Using where |
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.001015)
+</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/03_steps/3">
+<h1>Step 3</h1>
+
+<h2>Index <code>published</code> column</h2>
+
+<pre><code>5 latest posts
+SELECT  `posts`.* FROM `posts`  ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------+
+| id | select_type | table | type  | possible_keys |            key            | key_len | ref | filtered |   rows    | Extra |
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------+
+| 1  | SIMPLE      | posts | index |               | index_posts_on_created_at | 9       |     | 5        | 1856440.0 |       |
++----+-------------+-------+-------+---------------+---------------------------+---------+-----+----------+-----------+-------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.001745)
+
+5 latest published posts
+SELECT  `posts`.* FROM `posts`  WHERE `posts`.`published` = 1 ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+-------+--------------------------+---------------------------+---------+-----+----------+----------+-------------+
+| id | select_type | table | type  |      possible_keys       |            key            | key_len | ref | filtered |   rows   |    Extra    |
++----+-------------+-------+-------+--------------------------+---------------------------+---------+-----+----------+----------+-------------+
+| 1  | SIMPLE      | posts | index | index_posts_on_published | index_posts_on_created_at | 9       |     | 10       | 464110.0 | Using where |
++----+-------------+-------+-------+--------------------------+---------------------------+---------+-----+----------+----------+-------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.000762)
+</code></pre>
+
+<h2>New index isn't being used - too small</h2></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/03_steps/4">
+<h1>Step 4</h1>
+
+<h2>Queries with user model</h2>
+
+<pre><code>Posts for a user
+SELECT `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 364
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+-------------+
+| id | select_type | table | type | possible_keys | key | key_len | ref | filtered | rows  |    Extra    |
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+-------------+
+| 1  | SIMPLE      | posts | ALL  |               |     |         |     | 92822    | 100.0 | Using where |
++----+-------------+-------+------+---------------+-----+---------+-----+----------+-------+-------------+
+      user     system      total        real
+  0.010000   0.000000   0.010000 (  0.292788)
+
+Published posts for a user
+SELECT `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 364 AND `posts`.`published` = 1
++----+-------------+-------+------+--------------------------+--------------------------+---------+-------+----------+-------+-------------+
+| id | select_type | table | type |      possible_keys       |           key            | key_len |  ref  | filtered | rows  |    Extra    |
++----+-------------+-------+------+--------------------------+--------------------------+---------+-------+----------+-------+-------------+
+| 1  | SIMPLE      | posts | ref  | index_posts_on_published | index_posts_on_published | 2       | const | 46411    | 100.0 | Using where |
++----+-------------+-------+------+--------------------------+--------------------------+---------+-------+----------+-------+-------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.353386)
+
+5 latest published posts for a user
+SELECT  `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 364 AND `posts`.`published` = 1 ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+-------+--------------------------+---------------------------+---------+-----+----------+----------+-------------+
+| id | select_type | table | type  |      possible_keys       |            key            | key_len | ref | filtered |   rows   |    Extra    |
++----+-------------+-------+-------+--------------------------+---------------------------+---------+-----+----------+----------+-------------+
+| 1  | SIMPLE      | posts | index | index_posts_on_published | index_posts_on_created_at | 9       |     | 10       | 464110.0 | Using where |
++----+-------------+-------+-------+--------------------------+---------------------------+---------+-----+----------+----------+-------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.705879)
+</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/03_steps/5">
+<h1>Step 5</h1>
+
+<h2>Index <code>user_id</code> column</h2>
+
+<pre><code>Posts for a user
+SELECT `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 866
++----+-------------+-------+------+------------------------+------------------------+---------+-------+----------+-------+-------------+
+| id | select_type | table | type |     possible_keys      |          key           | key_len |  ref  | filtered | rows  |    Extra    |
++----+-------------+-------+------+------------------------+------------------------+---------+-------+----------+-------+-------------+
+| 1  | SIMPLE      | posts | ref  | index_posts_on_user_id | index_posts_on_user_id | 5       | const | 78       | 100.0 | Using where |
++----+-------------+-------+------+------------------------+------------------------+---------+-------+----------+-------+-------------+
+      user     system      total        real
+  0.010000   0.000000   0.010000 (  0.004369)
+
+Published posts for a user
+SELECT `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 866 AND `posts`.`published` = 1
++----+-------------+-------+-------------+-------------------------------------------------+-------------------------------------------------+---------+-----+----------+-------+-------------------------------------------------------------------------------+
+| id | select_type | table |    type     |                  possible_keys                  |                       key                       | key_len | ref | filtered | rows  |                                     Extra                                     |
++----+-------------+-------+-------------+-------------------------------------------------+-------------------------------------------------+---------+-----+----------+-------+-------------------------------------------------------------------------------+
+| 1  | SIMPLE      | posts | index_merge | index_posts_on_published,index_posts_on_user_id | index_posts_on_user_id,index_posts_on_published | 5,2     |     | 39       | 76.92 | Using intersect(index_posts_on_user_id,index_posts_on_published); Using where |
++----+-------------+-------+-------------+-------------------------------------------------+-------------------------------------------------+---------+-----+----------+-------+-------------------------------------------------------------------------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.014671)
+
+5 latest published posts for a user
+SELECT  `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 866 AND `posts`.`published` = 1 ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+-------------+-------------------------------------------------+-------------------------------------------------+---------+-----+----------+-------+-----------------------------------------------------------------------------------------------+
+| id | select_type | table |    type     |                  possible_keys                  |                       key                       | key_len | ref | filtered | rows  |                                             Extra                                             |
++----+-------------+-------+-------------+-------------------------------------------------+-------------------------------------------------+---------+-----+----------+-------+-----------------------------------------------------------------------------------------------+
+| 1  | SIMPLE      | posts | index_merge | index_posts_on_published,index_posts_on_user_id | index_posts_on_user_id,index_posts_on_published | 5,2     |     | 39       | 100.0 | Using intersect(index_posts_on_user_id,index_posts_on_published); Using where; Using filesort |
++----+-------------+-------+-------------+-------------------------------------------------+-------------------------------------------------+---------+-----+----------+-------+-----------------------------------------------------------------------------------------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.010155)
+</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/03_steps/6">
+<h1>Step 6</h1>
+
+<h2>Index <code>user_id, published</code> columns</h2>
+
+<h2>Composite index</h2>
+
+<pre><code>Posts for a user
+SELECT `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 735
++----+-------------+-------+------+-------------------------------------------------------------+------------------------+---------+-------+----------+-------+-------------+
+| id | select_type | table | type |                        possible_keys                        |          key           | key_len |  ref  | filtered | rows  |    Extra    |
++----+-------------+-------+------+-------------------------------------------------------------+------------------------+---------+-------+----------+-------+-------------+
+| 1  | SIMPLE      | posts | ref  | index_posts_on_user_id,index_posts_on_user_id_and_published | index_posts_on_user_id | 5       | const | 95       | 100.0 | Using where |
++----+-------------+-------+------+-------------------------------------------------------------+------------------------+---------+-------+----------+-------+-------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.003233)
+
+Published posts for a user
+SELECT `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 735 AND `posts`.`published` = 1
++----+-------------+-------+------+--------------------------------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-------------+
+| id | select_type | table | type |                                    possible_keys                                     |                 key                  | key_len |     ref     | filtered | rows  |    Extra    |
++----+-------------+-------+------+--------------------------------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-------------+
+| 1  | SIMPLE      | posts | ref  | index_posts_on_published,index_posts_on_user_id,index_posts_on_user_id_and_published | index_posts_on_user_id_and_published | 7       | const,const | 34       | 100.0 | Using where |
++----+-------------+-------+------+--------------------------------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.002425)
+
+5 latest published posts for a user
+SELECT  `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 735 AND `posts`.`published` = 1 ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+------+--------------------------------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-----------------------------+
+| id | select_type | table | type |                                    possible_keys                                     |                 key                  | key_len |     ref     | filtered | rows  |            Extra            |
++----+-------------+-------+------+--------------------------------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-----------------------------+
+| 1  | SIMPLE      | posts | ref  | index_posts_on_published,index_posts_on_user_id,index_posts_on_user_id_and_published | index_posts_on_user_id_and_published | 7       | const,const | 34       | 100.0 | Using where; Using filesort |
++----+-------------+-------+------+--------------------------------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-----------------------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.001102)
+</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="sample_code/03_steps/7">
+<h1>Step 6</h1>
+
+<h2>Remove <code>user_id</code> index</h2>
+
+<h2>Can use <code>user_id, published</code> index</h2>
+
+<pre><code>Posts for a user
+SELECT `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 352
++----+-------------+-------+------+--------------------------------------+--------------------------------------+---------+-------+----------+-------+-------------+
+| id | select_type | table | type |            possible_keys             |                 key                  | key_len |  ref  | filtered | rows  |    Extra    |
++----+-------------+-------+------+--------------------------------------+--------------------------------------+---------+-------+----------+-------+-------------+
+| 1  | SIMPLE      | posts | ref  | index_posts_on_user_id_and_published | index_posts_on_user_id_and_published | 5       | const | 75       | 100.0 | Using where |
++----+-------------+-------+------+--------------------------------------+--------------------------------------+---------+-------+----------+-------+-------------+
+      user     system      total        real
+  0.000000   0.000000   0.000000 (  0.004695)
+
+Published posts for a user
+SELECT `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 352 AND `posts`.`published` = 1
++----+-------------+-------+------+---------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-------------+
+| id | select_type | table | type |                         possible_keys                         |                 key                  | key_len |     ref     | filtered | rows  |    Extra    |
++----+-------------+-------+------+---------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-------------+
+| 1  | SIMPLE      | posts | ref  | index_posts_on_published,index_posts_on_user_id_and_published | index_posts_on_user_id_and_published | 7       | const,const | 33       | 100.0 | Using where |
++----+-------------+-------+------+---------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-------------+
+      user     system      total        real
+  0.000000   0.010000   0.010000 (  0.001554)
+
+5 latest published posts for a user
+SELECT  `posts`.* FROM `posts`  WHERE `posts`.`user_id` = 352 AND `posts`.`published` = 1 ORDER BY created_at DESC LIMIT 5
++----+-------------+-------+------+---------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-----------------------------+
+| id | select_type | table | type |                         possible_keys                         |                 key                  | key_len |     ref     | filtered | rows  |            Extra            |
++----+-------------+-------+------+---------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-----------------------------+
+| 1  | SIMPLE      | posts | ref  | index_posts_on_published,index_posts_on_user_id_and_published | index_posts_on_user_id_and_published | 7       | const,const | 33       | 100.0 | Using where; Using filesort |
++----+-------------+-------+------+---------------------------------------------------------------+--------------------------------------+---------+-------------+----------+-------+-----------------------------+
+      user     system      total        real
+  0.010000   0.000000   0.010000 (  0.001021)
+</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content" ref="real_examples/real_examples/1">
+<h1>Real world examples</h1></div>
+</div><div class="slide" data-transition="none"><div class="content" ref="real_examples/real_examples/2">
+<h2>Finding a product verions latest publication</h2></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="real_examples/real_examples/3">
+<pre class="sh_ruby"><code>class Publication &lt; ActiveRecord::Base
+  # ...
+
+  scope :published, where("
+    publications.status = ? AND
+    publications.published_at &lt;= utc_timestamp()
+    AND (
+      publications.expired_at IS NULL OR
+      publications.expired_at &gt; utc_timestamp()
+    )", 'approved')
+
+  scope :in_store, lambda { |store_id|
+    where(:store_id =&gt; store_id)
+  }
+
+  scope :published_in_store, lambda { |store_id|
+    in_store(store_id).published
+  }
+
+  # ...
+end</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="real_examples/real_examples/4">
+<pre class="sh_ruby"><code>class AddPublishedIndexToPublication &lt; ActiveRecord::Migration
+  def self.up
+    add_index :publications, [
+      :product_version_id,
+      :store_id,
+      :status,
+      :published_at,
+      :expired_at], :name =&gt; 'by_published'
+  end
+
+  def self.down
+    remove_index :publications, :name =&gt; 'by_published'
+  end
+end</code></pre>
+
+<p><a href="https://github.com/partnerpedia/partnerpedia/blob/3308b17d2e3e4a3d3d855c8d69daeba313eb510a/db/migrate/20110704215429_add_published_index_to_publication.rb">Source</a></p></div>
+</div><div class="slide" data-transition="none"><div class="content" ref="real_examples/real_examples/5">
+<h2>Looking up product version categories</h2></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="real_examples/real_examples/6">
+<pre class="sh_ruby"><code>class ProductVersion &lt; ActiveRecord::Base
+  # ...
+
+  has_and_belongs_to_many :product_type_categories
+
+  # ...
+end</code></pre></div>
+</div><div class="slide" data-transition="none"><div class="content smaller" ref="real_examples/real_examples/7">
+<pre class="sh_ruby"><code>class AddIndicesToProductTypeCategoriesProductVersions &lt; ActiveRecord::Migration
+  def self.up
+    add_index :product_type_categories_product_versions,
+      :product_version_id,
+      :name =&gt; 'by_product_version_id'
+    add_index :product_type_categories_product_versions,
+      :product_type_category_id,
+      :name =&gt; 'by_product_type_category_id'
+  end
+
+  def self.down
+    remove_index :product_type_categories_product_versions,
+      :name =&gt; 'by_product_version_id'
+    remove_index :product_type_categories_product_versions,
+      :name =&gt; 'by_product_type_category_id'
+  end
+end</code></pre>
+
+<p><a href="https://github.com/partnerpedia/partnerpedia/blob/3308b17d2e3e4a3d3d855c8d69daeba313eb510a/db/migrate/20110704222304_add_indices_to_product_type_categories_product_versions.rb">Source</a></p></div>
+</div><div class="slide" data-transition="none"><div class="content" ref="real_examples/real_examples/8">
+<h2>If you can't optimize the query ...</h2>
+
+<h2>Cache it!</h2>
+
+<h2>Or denormalize it!</h2></div>
+</div><div class="slide" data-transition="none"><div class="content bullets" ref="resources/resources">
+<h1>Resources</h1>
+
+<ul>
+<li><a href="http://dev.mysql.com/doc/refman/5.1/en/explain-output.html">EXPLAIN Output Format</a></li>
+<li><a href="http://dev.mysql.com/doc/refman/5.1/en/mysql-indexes.html">How MySQL Uses Indexes</a></li>
+</ul>
+</div>
+</div></div>
+
+</body>
+</html>
