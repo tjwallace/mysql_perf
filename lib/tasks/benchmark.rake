@@ -25,4 +25,9 @@ end
 task :benchmark => :environment do
   benchmark_query "5 latest posts", Post.latest.limit(5)
   benchmark_query "5 latest published posts", Post.published.latest.limit(5)
+
+  user = User.find(rand(1000) + 1)
+  benchmark_query "Posts for a user", user.posts
+  benchmark_query "Published posts for a user", user.posts.published
+  benchmark_query "5 latest published posts for a user", user.posts.published.latest.limit(5)
 end
