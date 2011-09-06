@@ -30,3 +30,10 @@
     | created_at | datetime     | YES  |     | NULL    |                |
     | updated_at | datetime     | YES  |     | NULL    |                |
     +------------+--------------+------+-----+---------+----------------+
+
+!SLIDE
+
+# Data
+
+## 1,000 users
+## 100,000 posts
