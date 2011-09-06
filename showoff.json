@@ -1,6 +1,8 @@
 {
   "name": "Mysql Optimization",
   "sections":[
-    {"section":"one"}
+    {"section":"title"},
+    {"section":"overview"},
+    {"section":"real_examples"}
   ]
 }
